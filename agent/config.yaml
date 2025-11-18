@@ -1,0 +1,122 @@
+# Process Mining Agent Configuration
+# Configuration for the Process Mining Agent system
+
+# Materialized Views Configuration
+materialized_views:
+  enabled: true
+  refresh_strategy: "daily"  # daily, hourly, manual
+  refresh_time: "02:00"  # HH:MM format
+  incremental_after_load: true
+  max_retries: 3
+  retry_delay_seconds: 30
+
+# Query Cache Configuration
+query_cache:
+  enabled: true
+  ttl_seconds: 3600  # 1 hour
+  max_size_mb: 1024  # 1GB
+  max_entries: 1000
+  cleanup_interval_seconds: 300  # 5 minutes
+
+# Process Discovery Configuration
+process_discovery:
+  default_algorithm: "inductive_miner"  # inductive_miner, alpha_miner, heuristic_miner
+  min_variant_frequency: 0.01  # 1% minimum frequency
+  max_variants: 1000
+  conformance_threshold: 0.8  # 80% conformance threshold
+  enable_predictions: true
+
+# Natural Language Agent Configuration
+agent:
+  llm_provider: "openai"  # openai, anthropic, local
+  model: "gpt-4"
+  temperature: 0.1
+  max_tokens: 2000
+  timeout_seconds: 30
+  max_retries: 3
+  
+  # Intent recognition
+  intent_confidence_threshold: 0.7
+  fallback_to_keywords: true
+  
+  # Response formatting
+  include_query_metadata: true
+  include_performance_stats: true
+  max_results_per_query: 100
+
+# Query Optimization Configuration
+query_optimization:
+  enable_partition_pruning: true
+  enable_predicate_pushdown: true
+  enable_column_pruning: true
+  max_parallel_queries: 4
+  query_timeout_seconds: 300  # 5 minutes
+  
+  # Performance thresholds
+  slow_query_threshold_ms: 5000  # 5 seconds
+  cache_warmup_queries: [
+    "get_process_variants",
+    "get_activity_frequencies", 
+    "get_object_interaction_graph"
+  ]
+
+# Data Quality Configuration
+data_quality:
+  enable_validation: true
+  check_completeness: true
+  check_consistency: true
+  check_timeliness: true
+  
+  # Validation thresholds
+  max_null_percentage: 0.1  # 10%
+  max_duplicate_percentage: 0.05  # 5%
+  max_age_days: 30
+
+# Security Configuration
+security:
+  enable_access_control: false  # Set to true for production
+  require_authentication: false
+  audit_logging: true
+  
+  # API security
+  rate_limiting:
+    enabled: false
+    requests_per_minute: 100
+    burst_size: 20
+
+# Monitoring and Logging
+monitoring:
+  enable_metrics: true
+  enable_health_checks: true
+  log_level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  
+  # Performance monitoring
+  track_query_performance: true
+  track_resource_usage: true
+  alert_on_slow_queries: true
+  
+  # Health check intervals
+  health_check_interval_seconds: 60
+  metrics_collection_interval_seconds: 30
+
+# Error Handling Configuration
+error_handling:
+  max_retries: 3
+  retry_delay_seconds: 5
+  exponential_backoff: true
+  fail_fast: false
+  
+  # Error reporting
+  log_errors: true
+  include_stack_traces: true
+  error_notification_threshold: 10  # errors per minute
+
+# Development and Testing
+development:
+  enable_debug_mode: false
+  enable_profiling: false
+  mock_external_services: false
+  
+  # Test data
+  use_sample_data: false
+  sample_data_size: 1000

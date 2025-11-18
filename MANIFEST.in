@@ -1,0 +1,13 @@
+include README.md
+include LICENSE
+include pyproject.toml
+recursive-include lakehouse/catalogs *.yaml
+recursive-include lakehouse/schemas *.yaml
+recursive-include lakehouse/agent *.yaml
+recursive-include lakehouse/docs *.md
+global-exclude __pycache__
+global-exclude *.py[cod]
+global-exclude *$py.class
+global-exclude *.so
+global-exclude .DS_Store
+

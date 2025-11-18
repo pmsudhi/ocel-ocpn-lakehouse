@@ -1,0 +1,5 @@
+type: sql
+# SQLite-backed catalog storing table metadata locally; no external services required
+uri: sqlite:///warehouse/catalog.db
+warehouse: file://warehouse
+

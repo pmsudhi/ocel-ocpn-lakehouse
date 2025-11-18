@@ -1,0 +1,222 @@
+# Complete OCPN Schema Implementation
+# Following the detailed specification in the plan
+
+# OCPN Models
+ocpn.models:
+  schema:
+    - name: model_id
+      type: string
+      required: true
+      comment: "Primary key - model identifier"
+    - name: version
+      type: long
+      required: true
+      comment: "Model version number"
+    - name: name
+      type: string
+      required: false
+      comment: "Human-readable model name"
+    - name: created_at
+      type: timestamptz
+      required: true
+      comment: "Model creation timestamp"
+    - name: source_format
+      type: string
+      required: false
+      comment: "Source format (e.g., PNML)"
+    - name: raw_pnml
+      type: binary
+      required: false
+      comment: "Raw PNML binary data for fidelity"
+    - name: notes
+      type: string
+      required: false
+      comment: "Additional notes or description"
+  properties:
+    format-version: "2"
+    write.target-file-size-bytes: "134217728"  # 128MB for model metadata
+
+# OCPN Places
+ocpn.places:
+  schema:
+    - name: model_id
+      type: string
+      required: true
+      comment: "Foreign key to models"
+    - name: place_id
+      type: string
+      required: true
+      comment: "Place ID within the model"
+    - name: label
+      type: string
+      required: false
+      comment: "Human-readable place label"
+  partition_spec:
+    - name: model_id_identity
+      transform: identity
+      source_id: 1  # model_id field
+  sort_order:
+    - source_id: 1  # model_id
+      direction: asc
+      null_order: nulls_first
+    - source_id: 2  # place_id
+      direction: asc
+      null_order: nulls_first
+  properties:
+    format-version: "2"
+    write.target-file-size-bytes: "134217728"  # 128MB
+
+# OCPN Transitions
+ocpn.transitions:
+  schema:
+    - name: model_id
+      type: string
+      required: true
+      comment: "Foreign key to models"
+    - name: transition_id
+      type: string
+      required: true
+      comment: "Transition ID within the model"
+    - name: label
+      type: string
+      required: false
+      comment: "Human-readable transition label"
+    - name: invisible
+      type: boolean
+      required: false
+      comment: "Whether transition is invisible (tau transition)"
+  partition_spec:
+    - name: model_id_identity
+      transform: identity
+      source_id: 1  # model_id field
+  sort_order:
+    - source_id: 1  # model_id
+      direction: asc
+      null_order: nulls_first
+    - source_id: 2  # transition_id
+      direction: asc
+      null_order: nulls_first
+  properties:
+    format-version: "2"
+    write.target-file-size-bytes: "134217728"  # 128MB
+
+# OCPN Arcs
+ocpn.arcs:
+  schema:
+    - name: model_id
+      type: string
+      required: true
+      comment: "Foreign key to models"
+    - name: arc_id
+      type: string
+      required: true
+      comment: "Arc ID within the model"
+    - name: src_type
+      type: string
+      required: true
+      comment: "Source type (place or transition)"
+    - name: src_id
+      type: string
+      required: true
+      comment: "Source element ID"
+    - name: dst_type
+      type: string
+      required: true
+      comment: "Destination type (place or transition)"
+    - name: dst_id
+      type: string
+      required: true
+      comment: "Destination element ID"
+    - name: weight
+      type: long
+      required: false
+      comment: "Arc weight (default 1)"
+  partition_spec:
+    - name: model_id_identity
+      transform: identity
+      source_id: 1  # model_id field
+  sort_order:
+    - source_id: 1  # model_id
+      direction: asc
+      null_order: nulls_first
+    - source_id: 2  # arc_id
+      direction: asc
+      null_order: nulls_first
+  properties:
+    format-version: "2"
+    write.target-file-size-bytes: "134217728"  # 128MB
+
+# OCPN Markings
+ocpn.markings:
+  schema:
+    - name: model_id
+      type: string
+      required: true
+      comment: "Foreign key to models"
+    - name: place_id
+      type: string
+      required: true
+      comment: "Foreign key to places"
+    - name: tokens
+      type: long
+      required: true
+      comment: "Number of tokens in the place"
+    - name: marking_type
+      type: string
+      required: true
+      comment: "Marking type (initial, final, etc.)"
+  partition_spec:
+    - name: model_id_identity
+      transform: identity
+      source_id: 1  # model_id field
+  sort_order:
+    - source_id: 1  # model_id
+      direction: asc
+      null_order: nulls_first
+    - source_id: 2  # place_id
+      direction: asc
+      null_order: nulls_first
+  properties:
+    format-version: "2"
+    write.target-file-size-bytes: "134217728"  # 128MB
+
+# OCPN Layout (Visualization)
+ocpn.layout:
+  schema:
+    - name: model_id
+      type: string
+      required: true
+      comment: "Foreign key to models"
+    - name: element_type
+      type: string
+      required: true
+      comment: "Element type (place, transition)"
+    - name: element_id
+      type: string
+      required: true
+      comment: "Element ID within the model"
+    - name: x
+      type: double
+      required: true
+      comment: "X coordinate for visualization"
+    - name: y
+      type: double
+      required: true
+      comment: "Y coordinate for visualization"
+  partition_spec:
+    - name: model_id_identity
+      transform: identity
+      source_id: 1  # model_id field
+  sort_order:
+    - source_id: 1  # model_id
+      direction: asc
+      null_order: nulls_first
+    - source_id: 2  # element_type
+      direction: asc
+      null_order: nulls_first
+    - source_id: 3  # element_id
+      direction: asc
+      null_order: nulls_first
+  properties:
+    format-version: "2"
+    write.target-file-size-bytes: "134217728"  # 128MB

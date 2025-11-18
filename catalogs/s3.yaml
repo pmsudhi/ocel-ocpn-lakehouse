@@ -1,0 +1,8 @@
+type: hadoop
+warehouse: s3://<your-bucket>/warehouse
+
+# Optional S3 settings; adjust as needed
+s3.region: <your-region>
+s3.path.style.access: true
+# credentials picked up from environment/instance profile by default
+

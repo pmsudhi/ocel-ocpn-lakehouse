@@ -1,0 +1,99 @@
+# OCEL schemas and partition/sort specs (Iceberg logical model)
+
+event_types:
+  schema:
+    - {name: name, type: string, required: true}
+    - {name: description, type: string, required: false}
+
+object_types:
+  schema:
+    - {name: name, type: string, required: true}
+    - {name: description, type: string, required: false}
+
+events:
+  schema:
+    - {name: id, type: string, required: true}
+    - {name: type, type: string, required: true}
+    - {name: time, type: timestamp, required: true}
+    - {name: event_date, type: date, required: true}
+    - {name: event_month, type: string, required: false}
+    - {name: vendor_code, type: string, required: false}
+    - {name: request_id, type: string, required: false}
+  partition:
+    - years: event_date
+    - months: event_date
+  sort:
+    - type
+    - time
+    - id
+  properties:
+    target-file-size-bytes: 268435456
+    write.distribution-mode: hash
+
+event_objects:
+  schema:
+    - {name: event_id, type: string, required: true}
+    - {name: object_id, type: string, required: true}
+    - {name: qualifier, type: string, required: false}
+  partition:
+    - bucket: {field: event_id, buckets: 64}
+  sort:
+    - event_id
+    - object_id
+
+event_attributes:
+  schema:
+    - {name: event_id, type: string, required: true}
+    - {name: name, type: string, required: true}
+    - {name: val_string, type: string, required: false}
+    - {name: val_double, type: double, required: false}
+    - {name: val_boolean, type: boolean, required: false}
+    - {name: val_timestamp, type: timestamp, required: false}
+    - {name: val_long, type: long, required: false}
+    - {name: val_decimal, type: decimal(38,10), required: false}
+    - {name: val_bytes, type: binary, required: false}
+    - {name: val_type, type: string, required: true}
+    - {name: val_json, type: string, required: false}
+  partition:
+    - bucket: {field: event_id, buckets: 32}
+  sort:
+    - event_id
+    - name
+
+objects:
+  schema:
+    - {name: id, type: string, required: true}
+    - {name: type, type: string, required: true}
+    - {name: created_at, type: timestamp, required: false}
+    - {name: lifecycle_state, type: string, required: false}
+  partition:
+    - identity: type
+  sort:
+    - type
+    - id
+
+object_attributes:
+  schema:
+    - {name: object_id, type: string, required: true}
+    - {name: name, type: string, required: true}
+    - {name: val_string, type: string, required: false}
+    - {name: val_double, type: double, required: false}
+    - {name: val_boolean, type: boolean, required: false}
+    - {name: val_timestamp, type: timestamp, required: false}
+    - {name: val_long, type: long, required: false}
+    - {name: val_decimal, type: decimal(38,10), required: false}
+    - {name: val_bytes, type: binary, required: false}
+    - {name: val_type, type: string, required: true}
+    - {name: val_json, type: string, required: false}
+  partition:
+    - bucket: {field: object_id, buckets: 32}
+  sort:
+    - object_id
+    - name
+
+log_metadata:
+  schema:
+    - {name: key, type: string, required: true}
+    - {name: value, type: string, required: false}
+    - {name: updated_at, type: timestamp, required: true}
+

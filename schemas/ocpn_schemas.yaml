@@ -1,0 +1,50 @@
+# OCPN normalized tables for Petri net models
+
+models:
+  schema:
+    - {name: model_id, type: string, required: true}
+    - {name: version, type: int, required: true}
+    - {name: name, type: string, required: false}
+    - {name: created_at, type: timestamp, required: true}
+    - {name: source_format, type: string, required: false}
+    - {name: raw_pnml, type: binary, required: false}
+    - {name: notes, type: string, required: false}
+
+places:
+  schema:
+    - {name: model_id, type: string, required: true}
+    - {name: place_id, type: string, required: true}
+    - {name: label, type: string, required: false}
+
+transitions:
+  schema:
+    - {name: model_id, type: string, required: true}
+    - {name: transition_id, type: string, required: true}
+    - {name: label, type: string, required: false}
+    - {name: invisible, type: boolean, required: false}
+
+arcs:
+  schema:
+    - {name: model_id, type: string, required: true}
+    - {name: arc_id, type: string, required: true}
+    - {name: src_type, type: string, required: true}
+    - {name: src_id, type: string, required: true}
+    - {name: dst_type, type: string, required: true}
+    - {name: dst_id, type: string, required: true}
+    - {name: weight, type: int, required: false}
+
+markings:
+  schema:
+    - {name: model_id, type: string, required: true}
+    - {name: place_id, type: string, required: true}
+    - {name: tokens, type: int, required: true}
+    - {name: marking_type, type: string, required: true}
+
+layout:
+  schema:
+    - {name: model_id, type: string, required: true}
+    - {name: element_type, type: string, required: true}
+    - {name: element_id, type: string, required: true}
+    - {name: x, type: double, required: false}
+    - {name: y, type: double, required: false}
+

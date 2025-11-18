@@ -1,0 +1,490 @@
+# Complete OCEL 2.0 Schema Implementation
+# Following the detailed specification in the plan
+
+# Process Instance Tracking Tables (NEW)
+ocel.process_instances:
+  schema:
+    - name: instance_id
+      type: string
+      required: true
+      comment: "Primary key - process instance identifier"
+    - name: instance_type
+      type: string
+      required: true
+      comment: "Type of process instance (e.g., 'purchase_order', 'invoice_process')"
+    - name: primary_object_id
+      type: string
+      required: false
+      comment: "Foreign key to objects - primary object for this instance"
+    - name: start_time
+      type: timestamptz
+      required: true
+      comment: "Process instance start timestamp"
+    - name: end_time
+      type: timestamptz
+      required: false
+      comment: "Process instance end timestamp (nullable for running instances)"
+    - name: status
+      type: string
+      required: true
+      comment: "Process status: running, completed, failed, cancelled"
+    - name: duration_seconds
+      type: long
+      required: false
+      comment: "Total duration in seconds (computed from start_time and end_time)"
+  partition_spec:
+    - name: instance_type_identity
+      transform: identity
+      source_id: 2  # instance_type
+  sort_order:
+    - source_id: 2  # instance_type
+      direction: asc
+      null_order: nulls_first
+    - source_id: 4  # start_time
+      direction: asc
+      null_order: nulls_first
+    - source_id: 1  # instance_id
+      direction: asc
+      null_order: nulls_first
+  properties:
+    format-version: "2"
+    write.target-file-size-bytes: "268435456"  # 256MB
+
+ocel.instance_events:
+  schema:
+    - name: instance_id
+      type: string
+      required: true
+      comment: "Foreign key to process_instances"
+    - name: event_id
+      type: string
+      required: true
+      comment: "Foreign key to events"
+    - name: event_sequence
+      type: int
+      required: true
+      comment: "Position of event in process instance (1-based)"
+    - name: event_timestamp
+      type: timestamptz
+      required: true
+      comment: "Denormalized event timestamp for performance"
+  partition_spec:
+    - name: instance_id_bucket
+      transform: bucket[64]
+      source_id: 1  # instance_id
+  sort_order:
+    - source_id: 1  # instance_id
+      direction: asc
+      null_order: nulls_first
+    - source_id: 3  # event_sequence
+      direction: asc
+      null_order: nulls_first
+  properties:
+    format-version: "2"
+    write.target-file-size-bytes: "268435456"  # 256MB
+
+# OCEL 2.0 Metadata Tables (NEW)
+ocel.event_type_attributes:
+  schema:
+    - name: event_type_name
+      type: string
+      required: true
+      comment: "Foreign key to event_types"
+    - name: attribute_name
+      type: string
+      required: true
+      comment: "Name of the attribute"
+    - name: attribute_type
+      type: string
+      required: true
+      comment: "Data type: string, number, boolean, timestamp, object"
+    - name: is_required
+      type: boolean
+      required: true
+      comment: "Whether this attribute is mandatory for this event type"
+    - name: default_value
+      type: string
+      required: false
+      comment: "Default value if not provided"
+  partition_spec:
+    - name: event_type_identity
+      transform: identity
+      source_id: 1  # event_type_name
+  sort_order:
+    - source_id: 1  # event_type_name
+      direction: asc
+      null_order: nulls_first
+    - source_id: 2  # attribute_name
+      direction: asc
+      null_order: nulls_first
+  properties:
+    format-version: "2"
+    write.target-file-size-bytes: "134217728"  # 128MB
+
+ocel.object_type_attributes:
+  schema:
+    - name: object_type_name
+      type: string
+      required: true
+      comment: "Foreign key to object_types"
+    - name: attribute_name
+      type: string
+      required: true
+      comment: "Name of the attribute"
+    - name: attribute_type
+      type: string
+      required: true
+      comment: "Data type: string, number, boolean, timestamp, object"
+    - name: is_required
+      type: boolean
+      required: true
+      comment: "Whether this attribute is mandatory for this object type"
+    - name: default_value
+      type: string
+      required: false
+      comment: "Default value if not provided"
+  partition_spec:
+    - name: object_type_identity
+      transform: identity
+      source_id: 1  # object_type_name
+  sort_order:
+    - source_id: 1  # object_type_name
+      direction: asc
+      null_order: nulls_first
+    - source_id: 2  # attribute_name
+      direction: asc
+      null_order: nulls_first
+  properties:
+    format-version: "2"
+    write.target-file-size-bytes: "134217728"  # 128MB
+
+ocel.version_metadata:
+  schema:
+    - name: ocel_version
+      type: string
+      required: true
+      comment: "OCEL specification version (e.g., '2.0')"
+    - name: created_at
+      type: timestamptz
+      required: true
+      comment: "When this OCEL was created"
+    - name: source_system
+      type: string
+      required: false
+      comment: "Source system that generated this OCEL"
+    - name: extraction_parameters
+      type: string
+      required: false
+      comment: "JSON string of extraction parameters used"
+    - name: total_events
+      type: long
+      required: false
+      comment: "Total number of events in this OCEL"
+    - name: total_objects
+      type: long
+      required: false
+      comment: "Total number of objects in this OCEL"
+  partition_spec:
+    - name: version_identity
+      transform: identity
+      source_id: 1  # ocel_version
+  sort_order:
+    - source_id: 2  # created_at
+      direction: desc
+      null_order: nulls_first
+  properties:
+    format-version: "2"
+    write.target-file-size-bytes: "134217728"  # 128MB
+
+# Dimension Tables
+ocel.event_types:
+  schema:
+    - name: name
+      type: string
+      required: true
+      comment: "Primary key - event type name"
+    - name: description
+      type: string
+      required: false
+      comment: "Human-readable description"
+  properties:
+    format-version: "2"
+    write.target-file-size-bytes: "134217728"  # 128MB for small dimension
+
+ocel.object_types:
+  schema:
+    - name: name
+      type: string
+      required: true
+      comment: "Primary key - object type name"
+    - name: description
+      type: string
+      required: false
+      comment: "Human-readable description"
+  properties:
+    format-version: "2"
+    write.target-file-size-bytes: "134217728"  # 128MB for small dimension
+
+# Main Events Table (FACT)
+ocel.events:
+  schema:
+    - name: id
+      type: string
+      required: true
+      comment: "Primary key - event ID"
+    - name: type
+      type: string
+      required: true
+      comment: "Foreign key to event_types"
+    - name: time
+      type: timestamptz
+      required: true
+      comment: "Event timestamp with timezone"
+    - name: event_date
+      type: date
+      required: true
+      comment: "Derived date for partitioning"
+    - name: event_month
+      type: string
+      required: true
+      comment: "Derived YYYY-MM for quick filters"
+    - name: vendor_code
+      type: string
+      required: false
+      comment: "Hot denormalized key for performance"
+    - name: request_id
+      type: string
+      required: false
+      comment: "Hot denormalized key for performance"
+  partition_spec:
+    - name: event_date_year
+      transform: year
+      source_id: 4  # event_date field
+    - name: event_date_month
+      transform: month
+      source_id: 4  # event_date field
+  sort_order:
+    - source_id: 2  # type field
+      direction: asc
+      null_order: nulls_first
+    - source_id: 3  # time field
+      direction: asc
+      null_order: nulls_first
+    - source_id: 1  # id field
+      direction: asc
+      null_order: nulls_first
+  properties:
+    format-version: "2"
+    write.target-file-size-bytes: "268435456"  # 256MB
+    write.distribution-mode: "hash"
+    write.distribution-column: "id"
+
+# Event-Object Relationships
+ocel.event_objects:
+  schema:
+    - name: event_id
+      type: string
+      required: true
+      comment: "Foreign key to events"
+    - name: object_id
+      type: string
+      required: true
+      comment: "Foreign key to objects"
+    - name: qualifier
+      type: string
+      required: false
+      comment: "Relationship qualifier (consumes, produces, etc.)"
+  partition_spec:
+    - name: event_id_bucket
+      transform: bucket
+      source_id: 1  # event_id field
+      bucket_count: 64
+  sort_order:
+    - source_id: 1  # event_id
+      direction: asc
+      null_order: nulls_first
+    - source_id: 2  # object_id
+      direction: asc
+      null_order: nulls_first
+  properties:
+    format-version: "2"
+    write.target-file-size-bytes: "268435456"  # 256MB
+
+# Event Attributes (Typed)
+ocel.event_attributes:
+  schema:
+    - name: event_id
+      type: string
+      required: true
+      comment: "Foreign key to events"
+    - name: name
+      type: string
+      required: true
+      comment: "Attribute name"
+    - name: val_string
+      type: string
+      required: false
+      comment: "String value"
+    - name: val_double
+      type: double
+      required: false
+      comment: "Numeric value"
+    - name: val_boolean
+      type: boolean
+      required: false
+      comment: "Boolean value"
+    - name: val_timestamp
+      type: timestamptz
+      required: false
+      comment: "Timestamp value"
+    - name: val_long
+      type: long
+      required: false
+      comment: "Integer value"
+    - name: val_decimal
+      type: decimal(38,10)
+      required: false
+      comment: "Decimal value"
+    - name: val_bytes
+      type: binary
+      required: false
+      comment: "Binary value"
+    - name: val_type
+      type: string
+      required: true
+      comment: "Value type enum (string, double, boolean, timestamp, long, decimal, bytes)"
+    - name: val_json
+      type: string
+      required: false
+      comment: "JSON representation for complex values"
+  partition_spec:
+    - name: event_id_bucket
+      transform: bucket
+      source_id: 1  # event_id field
+      bucket_count: 32
+  sort_order:
+    - source_id: 1  # event_id
+      direction: asc
+      null_order: nulls_first
+    - source_id: 2  # name
+      direction: asc
+      null_order: nulls_first
+  properties:
+    format-version: "2"
+    write.target-file-size-bytes: "268435456"  # 256MB
+
+# Objects Table
+ocel.objects:
+  schema:
+    - name: id
+      type: string
+      required: true
+      comment: "Primary key - object ID"
+    - name: type
+      type: string
+      required: true
+      comment: "Foreign key to object_types"
+    - name: created_at
+      type: timestamptz
+      required: false
+      comment: "Object creation timestamp"
+    - name: lifecycle_state
+      type: string
+      required: false
+      comment: "Object lifecycle state"
+  partition_spec:
+    - name: type_identity
+      transform: identity
+      source_id: 2  # type field
+  sort_order:
+    - source_id: 2  # type
+      direction: asc
+      null_order: nulls_first
+    - source_id: 1  # id
+      direction: asc
+      null_order: nulls_first
+  properties:
+    format-version: "2"
+    write.target-file-size-bytes: "268435456"  # 256MB
+
+# Object Attributes (Typed)
+ocel.object_attributes:
+  schema:
+    - name: object_id
+      type: string
+      required: true
+      comment: "Foreign key to objects"
+    - name: name
+      type: string
+      required: true
+      comment: "Attribute name"
+    - name: val_string
+      type: string
+      required: false
+      comment: "String value"
+    - name: val_double
+      type: double
+      required: false
+      comment: "Numeric value"
+    - name: val_boolean
+      type: boolean
+      required: false
+      comment: "Boolean value"
+    - name: val_timestamp
+      type: timestamptz
+      required: false
+      comment: "Timestamp value"
+    - name: val_long
+      type: long
+      required: false
+      comment: "Integer value"
+    - name: val_decimal
+      type: decimal(38,10)
+      required: false
+      comment: "Decimal value"
+    - name: val_bytes
+      type: binary
+      required: false
+      comment: "Binary value"
+    - name: val_type
+      type: string
+      required: true
+      comment: "Value type enum"
+    - name: val_json
+      type: string
+      required: false
+      comment: "JSON representation for complex values"
+  partition_spec:
+    - name: object_id_bucket
+      transform: bucket
+      source_id: 1  # object_id field
+      bucket_count: 32
+  sort_order:
+    - source_id: 1  # object_id
+      direction: asc
+      null_order: nulls_first
+    - source_id: 2  # name
+      direction: asc
+      null_order: nulls_first
+  properties:
+    format-version: "2"
+    write.target-file-size-bytes: "268435456"  # 256MB
+
+# Log Metadata (Governance)
+ocel.log_metadata:
+  schema:
+    - name: key
+      type: string
+      required: true
+      comment: "Metadata key"
+    - name: value
+      type: string
+      required: true
+      comment: "Metadata value"
+    - name: updated_at
+      type: timestamptz
+      required: true
+      comment: "Last update timestamp"
+  properties:
+    format-version: "2"
+    write.target-file-size-bytes: "134217728"  # 128MB for small metadata

@@ -1,0 +1,105 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ocel-ocpn-lakehouse"
+version = "1.0.0"
+description = "A production-ready data lakehouse system for Object-Centric Event Logs (OCEL) and Object-Centric Petri Nets (OCPN) with advanced analytics capabilities built on Apache Iceberg"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Process Mining Team"}
+]
+keywords = [
+    "process-mining",
+    "ocel",
+    "ocpn",
+    "iceberg",
+    "data-lakehouse",
+    "pm4py",
+    "analytics"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+dependencies = [
+    "pm4py>=2.7.0",
+    "pandas>=1.5.0",
+    "matplotlib>=3.5.0",
+    "seaborn>=0.11.0",
+    "plotly>=5.0.0",
+    "scikit-learn>=1.1.0",
+    "networkx>=2.8.0",
+    "numpy>=1.21.0",
+    "pyiceberg>=0.10.0",
+    "daft[pandas,aws]>=0.6.7",
+    "duckdb>=1.4.1",
+    "pyyaml>=6.0",
+    "schedule>=1.2.0",
+    "openai>=1.0.0",
+    "anthropic>=0.7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+]
+dashboard = [
+    "streamlit>=1.20.0",
+]
+all = [
+    "ocel-ocpn-lakehouse[dev,dashboard]",
+]
+
+[project.urls]
+Homepage = "https://github.com/your-org/ocel-ocpn-lakehouse"
+Documentation = "https://github.com/your-org/ocel-ocpn-lakehouse/docs"
+Repository = "https://github.com/your-org/ocel-ocpn-lakehouse"
+Issues = "https://github.com/your-org/ocel-ocpn-lakehouse/issues"
+
+[tool.setuptools]
+# The package structure: current directory contains the lakehouse package
+# When installed, users import as: from lakehouse import ...
+# We need to set package-dir to make the current directory the root
+package-dir = {"" = "."}
+packages = {find = {}}
+
+[tool.setuptools.package-data]
+lakehouse = [
+    "catalogs/*.yaml",
+    "schemas/*.yaml",
+    "agent/config.yaml",
+]
+
+[tool.black]
+line-length = 100
+target-version = ['py39', 'py310', 'py311', 'py312']
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
