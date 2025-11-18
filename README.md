@@ -1,28 +1,4 @@
-Exploring the project structure to understand its organization and purpose.
-
-
-[6 tools called]
-
-
-Reading key documentation and configuration files:
-
-
-[5 tools called]
-
-
-Examining core implementation files to understand the architecture:
-
-
-[5 tools called]
-
-
-Reviewing a few more files to complete the analysis:
-
-
-[4 tools called]
-
-
-## Project Analysis: OCEL/OCPN Lakehouse
+# OCEL/OCPN Lakehouse
 
 ### Project Overview
 
